@@ -115,32 +115,53 @@ public class NumberTriangle {
      * @throws IOException may naturally occur if an issue reading the file occurs
      */
     public static NumberTriangle loadTriangle(String fname) throws IOException {
-        // open the file and get a BufferedReader object whose methods
-        // are more convenient to work with when reading the file contents.
+        // Open the resource file packaged with the project (e.g., in resources/)
         InputStream inputStream = NumberTriangle.class.getClassLoader().getResourceAsStream(fname);
-        BufferedReader br = new BufferedReader(new InputStreamReader(inputStream));
+        if (inputStream == null) {
+            throw new FileNotFoundException("Resource not found: " + fname);
+        }
 
-
-        // TODO define any variables that you want to use to store things
-
-        // will need to return the top of the NumberTriangle,
-        // so might want a variable for that.
         NumberTriangle top = null;
 
-        String line = br.readLine();
-        while (line != null) {
+        try (BufferedReader br = new BufferedReader(new InputStreamReader(inputStream))) {
+            java.util.List<NumberTriangle> prevRow = null;
 
-            // remove when done; this line is included so running starter code prints the contents of the file
-            System.out.println(line);
+            String line = br.readLine();
+            while (line != null) {
+                line = line.trim();
+                if (!line.isEmpty()) {
+                    // Parse numbers in this row
+                    String[] parts = line.split("\\s+");
+                    java.util.List<NumberTriangle> curRow = new java.util.ArrayList<>(parts.length);
+                    for (String p : parts) {
+                        curRow.add(new NumberTriangle(Integer.parseInt(p)));
+                    }
 
-            // TODO process the line
+                    // Keep the very first node as the top
+                    if (top == null) {
+                        top = curRow.get(0);
+                    }
 
-            //read the next line
-            line = br.readLine();
+                    // Link previous row to current row:
+                    // prev[i].left -> cur[i] and prev[i].right -> cur[i+1]
+                    if (prevRow != null) {
+                        for (int i = 0; i < prevRow.size(); i++) {
+                            prevRow.get(i).setLeft(curRow.get(i));
+                            prevRow.get(i).setRight(curRow.get(i + 1));
+                        }
+                    }
+
+                    prevRow = curRow;
+                }
+
+                // read next line
+                line = br.readLine();
+            }
         }
-        br.close();
+
         return top;
     }
+
 
     public static void main(String[] args) throws IOException {
 
